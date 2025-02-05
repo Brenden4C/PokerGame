@@ -1,0 +1,33 @@
+# Ignore temporary files
+*.tmp
+*.temp
+*.log
+*.swp
+*.swo
+*.swn
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore Eclipse and IntelliJ IDEA files
+*.class
+*.project
+*.classpath
+*.settings/
+bin/
+target/
+out/
+
+# Ignore Java dependencies
+*.jar
+*.war
+
+# Ignore uploaded temp files
+*.driveupload
+
+# Ignore Git-related files
+.gitignore
+
+# Ignore environment-specific settings
+.env
