@@ -79,6 +79,10 @@ public class Server {
     	//Send the hole cards to the player
     	player.sendHoleCards();
     }
+    
+    private static void dealCommunityCard() {
+    	
+    }
 
     static class ClientHandler extends Thread {
     	private Socket socket;
@@ -106,7 +110,7 @@ public class Server {
                 players.add(serverPlayer);
 
                 // Deal hole cards
-                serverPlayer.dealHoleCards();
+                dealHoleCards(serverPlayer);
 
                 // Listen for messages
                 String message;

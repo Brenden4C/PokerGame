@@ -29,46 +29,53 @@ public class GUIController {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1280, 720);
         
+        //Create the main panel that will hold the background image and the community cards
         BackgroundPanel bgPanel = new BackgroundPanel("/pokertable.jpg");
         
-        // Create labels to show chips
+        //This label will display to the user how many chips they have.
         JLabel chipsLabel = new JLabel("Chips: 1000"); // Assuming the player starts with 1000 chips TODO: MAKE PLAYERS CHIP COUNT GO HERE
 
-        JPanel actionPanel = handleButtons(frame);
-       
+        //Create the panel that will hold the label that shows the user the chips they have.
         JPanel statusPanel = new JPanel();
         statusPanel.add(chipsLabel);
         
-        // Add the action panel to the frame
+        //Setup the panel that has the buttons the user will press to send action to the server
+        //(Check, Raise, Fold, Bet, etc.)
+        JPanel actionPanel = handleButtons(frame);        
+        
+        //Set the layout of the main frame and add the panels to the frame.
         frame.setLayout(new BorderLayout());
         frame.add(bgPanel, BorderLayout.CENTER);
         frame.add(statusPanel, BorderLayout.NORTH);
         frame.add(actionPanel, BorderLayout.SOUTH);
         
+        //Set the frame to be visible for the client.
         frame.setVisible(true);
     }
 
+    //Method creates and hands the use for the buttons that handle the player actions.
+    //These actions include checking, raising, calling, folding, betting etc.
     private JPanel handleButtons(JFrame frame) {
     	
-    	// Create panel for buttons and bet input
+    	//Create panel for buttons and bet input
         JPanel actionPanel = new JPanel();
         actionPanel.setLayout(new FlowLayout());
     	
-    	// Create a text field for the bet amount
+    	//Create a text field for the bet amount
         JTextField betAmountField = new JTextField(10);
     	
-    	// Create buttons for actions
+    	//Create buttons for actions
         JButton checkButton = new JButton("Check");
         JButton callButton = new JButton("Call");
         JButton foldButton = new JButton("Fold");
         JButton betButton = new JButton("Bet");
 
-        // Add action listeners for the buttons
+        //Add action listeners for the buttons
         checkButton.addActionListener(e -> sendActionToServer("check", 0));
         callButton.addActionListener(e -> sendActionToServer("call", 0));
         foldButton.addActionListener(e -> sendActionToServer("fold", 0));
         
-        // Bet button needs to get the bet amount from the text field
+        //Bet button needs to get the bet amount from the text field
         betButton.addActionListener(e -> {
             try {
                 int betAmount = Integer.parseInt(betAmountField.getText());
@@ -78,7 +85,7 @@ public class GUIController {
             }
         });
     	
-    	// Add buttons and text field to the panel
+    	//Add buttons and text field to the panel
         actionPanel.add(checkButton);
         actionPanel.add(callButton);
         actionPanel.add(foldButton);
@@ -125,6 +132,8 @@ public class GUIController {
         
     }
     
+    //Takes in a list of CardGUI's (should be a 2 card list that represents the users hole cards) and then
+    //creates a new card panel and adds the panel to the frame.
     public void displayHoleCards(ArrayList<CardGUI> holeCards) {
     	// Create a custom panel for drawing the hole cards
         JPanel cardPanel = new JPanel() {
@@ -134,7 +143,8 @@ public class GUIController {
                 // Draw each card at its respective position (you can adjust x, y based on the layout)
                 int xPosition = 50;  // Starting X position for the first card
                 for (CardGUI card : holeCards) {
-                    card.draw(g);  // Call the draw method from the Card class to render the image
+                    card.setX(xPosition);
+                	card.draw(g);  // Call the draw method from the Card class to render the image
                     xPosition += 120;  // Adjust X position for the next card (you can tweak this value)
                 }
             }
@@ -151,8 +161,18 @@ public class GUIController {
     	
     }
 
-	public void addHoleCardsToGUI(List<Card> holeCards) {
-		// TODO Auto-generated method stub
+    //Takes in the card data from the server and then convers them into CardGUI objects for display,
+    //then adds the cards to a list and sends them to the display method.
+	public void addHoleCardsToGUI(String[] cardData) {
+		System.out.println("this was called");
+		ArrayList<CardGUI> holeCards = new ArrayList<CardGUI>();
 		
+		CardGUI card1 = new CardGUI("/cards/" + cardData[0] + ".png", 0, 0);
+		CardGUI card2 = new CardGUI("/cards/" + cardData[1] + ".png", 0, 0);
+		
+		holeCards.add(card1);
+		holeCards.add(card2);
+		
+		displayHoleCards(holeCards);
 	}
 }

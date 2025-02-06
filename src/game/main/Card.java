@@ -27,7 +27,21 @@ public class Card {
     		return "clubs";
     	}else
     		return "diamonds";
-    	
+    }
+    private String rankString() {
+    	if(this.rank.equals("T")) {
+    		return "10";
+    	}else if(this.rank.equals("J")) {
+    		return "jack";
+    	}else if(this.rank.equals("Q")) {
+    		return "queen";
+    	}else if(this.rank.equals("K")) {
+    		return "king";
+    	}else if(this.rank.equals("A")) {
+    		return "ace";
+    	}else {
+    		return this.rank;
+    	}
     }
 
     public int getRankValue() {
@@ -51,6 +65,6 @@ public class Card {
     
 	//Makes it to when we print a card in console it will return the rank and suit
     @Override public String toString() {
-        return "" + rank  + "_of_" + suitString();
+        return "" + rankString() + "_of_" + suitString();
     }
 }

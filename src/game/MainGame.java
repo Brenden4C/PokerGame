@@ -22,6 +22,8 @@ public class MainGame {
 		net.connect();
 		GUIController gui = new GUIController(net);
 		net.setGUIController(gui);
+		
+		net.startListeningForMessages();
 	}
 	
 }

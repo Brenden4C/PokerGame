@@ -23,17 +23,19 @@ public class NetworkController {
             socket = new Socket(serverIP, port);
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            // Start listening for messages from server
-            new Thread(this::listenForMessages).start();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+    
+    public void startListeningForMessages() {
+    	// Start listening for messages from server
+        new Thread(this::listenForMessages).start();
+    }
 
     public void setGUIController(GUIController gui) {
         this.gui = gui;
+        System.out.println("Gui is set");
     }
 
     public void sendMessage(String message) {
@@ -48,10 +50,17 @@ public class NetworkController {
             while ((message = in.readLine()) != null) {
                 System.out.println("Server: " + message);
                 if (message.startsWith("HOLE_CARDS")) {
-                    String[] cardData = message.substring(11).split(",");
+                    String[] cardData = message.substring(11).split(", ");
+                    int index = cardData[1].indexOf("]");
+                    cardData[0] = cardData[0].substring(1);
+                    cardData[1] = cardData[1].substring(0, index);
+                    System.out.println(cardData[0] + "---" +cardData[1]);
+                    this.gui.addHoleCardsToGUI(cardData);
                     System.out.println("Your hole cards: " + cardData[0] + " and " + cardData[1]);
+                    
                 }
             }
+            
         } catch (IOException e) {
             System.out.println("Disconnected from server.");
         }

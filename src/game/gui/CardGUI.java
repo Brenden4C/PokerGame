@@ -22,4 +22,27 @@ public class CardGUI {
 		}
 	}
 	
+	public void setX(int newX) {
+		x = newX;
+	}
+	
+	public void incX(int incX) {
+		x += incX;
+	}
+	
+	public int getX() {
+		return this.x;
+	}
+	
+	public void setY(int newY) {
+		y = newY;
+	}
+	
+	public void incY(int incY) {
+		y += incY;
+	}
+	
+	public int getY() {
+		return this.y;
+	}
 }
