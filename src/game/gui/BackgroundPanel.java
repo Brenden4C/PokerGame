@@ -27,16 +27,10 @@ public class BackgroundPanel extends JPanel {
         }
         
         communityCards = new ArrayList<>();
-        addCommunityCards(); //SAMPLE CARDS
     }
 
-    private void addCommunityCards() {
-    	// Sample card images - you should replace this with your actual logic to deal cards
-        communityCards.add(new CardGUI("/cards/2_of_hearts.png", 500, 200));
-        communityCards.add(new CardGUI("/cards/3_of_spades.png", 620, 200));
-        communityCards.add(new CardGUI("/cards/4_of_clubs.png", 740, 200));
-        communityCards.add(new CardGUI("/cards/5_of_diamonds.png", 860, 200));
-        communityCards.add(new CardGUI("/cards/6_of_hearts.png", 980, 200));
+    protected void addCommunityCard(CardGUI card) {
+    	communityCards.add(card);
 		
 	}
 
@@ -55,5 +49,9 @@ public class BackgroundPanel extends JPanel {
 	public void updateCommunityCards(ArrayList<CardGUI> newCards) {
 		communityCards = newCards;
 		repaint();
+	}
+	
+	public ArrayList<CardGUI> getCommunityCards() {
+		return this.communityCards;
 	}
 }

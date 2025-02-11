@@ -1,12 +1,9 @@
 package game.net;
 
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
-import java.util.ArrayList;
 
 import game.main.Card;
 import game.main.Player;
@@ -17,6 +14,7 @@ public class ServerPlayer{
     private PrintWriter out;
 	private Player player;
 	private String username;
+	private boolean hasPlayed;
 	
 	public ServerPlayer(Player player, String username, Socket socket, BufferedReader in, PrintWriter out) {
 		this.socket = socket;
@@ -24,6 +22,11 @@ public class ServerPlayer{
 		this.player = player;
 		this.out = out;
 		this.in = in;
+		this.hasPlayed = false;
+	}
+	
+	public BufferedReader getIn() {
+		return in;
 	}
 	
 	public void sendMessage(String message) {
@@ -44,7 +47,48 @@ public class ServerPlayer{
 	    }
 		
 	}
+	
+	public List<Card> getHand(){
+		return player.getHand();
+	}
+	
+	public void resetHand() {
+		player.getHand().clear();
+	}
+	
+	public void resetBet() {
+		player.resetRoundBet();
+	}
 
+	public void unfold() {
+		this.player.unfold();
+	}
 	
+	public void fold() {
+		this.player.fold();
+	}
 	
+	public boolean isFolded() {
+		return player.isFolded();
+	}
+	
+	public String getUsername() {
+		return this.username;
+	}
+	
+	public void bet(int bet) {
+		this.player.setCurrentBet( bet );
+	}
+	
+	public int getBet() {
+		return this.player.getCurrentBet();
+	}
+	
+	public boolean hasPlayed() {
+		return hasPlayed;
+	}
+	
+	public void setHasPlayed(boolean b) {
+		hasPlayed = b;
+	}
 }

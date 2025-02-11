@@ -2,7 +2,6 @@ package game.gui;
 
 import javax.swing.*;
 
-import game.main.Card;
 import game.net.NetworkController;
 
 import java.awt.*;
@@ -12,7 +11,9 @@ import java.util.List;
 public class GUIController {
     private NetworkController networkController;
     private JFrame frame;
-    private ArrayList<CardGUI> playerCards = new ArrayList<>();
+    private BackgroundPanel bgPanel;
+    private ChatPanel chatPanel;
+    private List<CardGUI> playerHand = new ArrayList<CardGUI>();
     
     public GUIController(NetworkController net) {
     	this.networkController = net;
@@ -30,10 +31,11 @@ public class GUIController {
         frame.setSize(1280, 720);
         
         //Create the main panel that will hold the background image and the community cards
-        BackgroundPanel bgPanel = new BackgroundPanel("/pokertable.jpg");
+        bgPanel = new BackgroundPanel("/pokertable.jpg");
+        chatPanel = new ChatPanel();
         
         //This label will display to the user how many chips they have.
-        JLabel chipsLabel = new JLabel("Chips: 1000"); // Assuming the player starts with 1000 chips TODO: MAKE PLAYERS CHIP COUNT GO HERE
+        JLabel chipsLabel = new JLabel(username + " Chips: 1000"); // Assuming the player starts with 1000 chips TODO: MAKE PLAYERS CHIP COUNT GO HERE
 
         //Create the panel that will hold the label that shows the user the chips they have.
         JPanel statusPanel = new JPanel();
@@ -48,6 +50,7 @@ public class GUIController {
         frame.add(bgPanel, BorderLayout.CENTER);
         frame.add(statusPanel, BorderLayout.NORTH);
         frame.add(actionPanel, BorderLayout.SOUTH);
+        frame.add(chatPanel, BorderLayout.EAST);
         
         //Set the frame to be visible for the client.
         frame.setVisible(true);
@@ -134,7 +137,7 @@ public class GUIController {
     
     //Takes in a list of CardGUI's (should be a 2 card list that represents the users hole cards) and then
     //creates a new card panel and adds the panel to the frame.
-    public void displayHoleCards(ArrayList<CardGUI> holeCards) {
+    public void displayHoleCards() {
     	// Create a custom panel for drawing the hole cards
         JPanel cardPanel = new JPanel() {
             @Override protected void paintComponent(Graphics g) {
@@ -142,7 +145,7 @@ public class GUIController {
                 
                 // Draw each card at its respective position (you can adjust x, y based on the layout)
                 int xPosition = 50;  // Starting X position for the first card
-                for (CardGUI card : holeCards) {
+                for (CardGUI card : playerHand) {
                     card.setX(xPosition);
                 	card.draw(g);  // Call the draw method from the Card class to render the image
                     xPosition += 120;  // Adjust X position for the next card (you can tweak this value)
@@ -164,15 +167,30 @@ public class GUIController {
     //Takes in the card data from the server and then convers them into CardGUI objects for display,
     //then adds the cards to a list and sends them to the display method.
 	public void addHoleCardsToGUI(String[] cardData) {
-		System.out.println("this was called");
-		ArrayList<CardGUI> holeCards = new ArrayList<CardGUI>();
 		
 		CardGUI card1 = new CardGUI("/cards/" + cardData[0] + ".png", 0, 0);
 		CardGUI card2 = new CardGUI("/cards/" + cardData[1] + ".png", 0, 0);
 		
-		holeCards.add(card1);
-		holeCards.add(card2);
+		playerHand.add(card1);
+		playerHand.add(card2);
 		
-		displayHoleCards(holeCards);
+		displayHoleCards();
 	}
+
+	public void addCommunityCard(String cardData) {
+		CardGUI card = new CardGUI("/cards/" + cardData + ".png", 0, 0);
+		if(bgPanel.getCommunityCards().size() != 0)
+			card.setX(bgPanel.getCommunityCards().get(bgPanel.getCommunityCards().size() - 1).getX() + 100);
+		this.bgPanel.addCommunityCard(card);
+		frame.revalidate();
+    	frame.repaint();
+	}
+
+	public void resetHoleCards() {
+		playerHand.clear();		
+	}
+	
+	public void updatePlayerList(List<String> players, String activePlayer) {
+        chatPanel.updatePlayerList(players, activePlayer);
+    }
 }

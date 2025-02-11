@@ -7,17 +7,20 @@ import java.util.*;
 import game.main.Player;
 import game.main.Deck;
 import game.main.Card;
-import game.gui.*;
+import game.main.GameState;
 
 public class Server {
     private static final int PORT = 12345;
-    private static final String USER_DATA_FILE = "users.txt";
-    private static Map<Socket, String> userMap = new HashMap<>();
     private static List<PrintWriter> clients = new ArrayList<>();
     private static boolean running = true;
+    private static List<ServerPlayer> players = new ArrayList<>();
+    private static List<String> playerNames = new ArrayList<>();
     
     private static Deck deck = new Deck();
-    private static List<ServerPlayer> players = new ArrayList<>();
+    private static GameState gameState = new GameState();
+    private static int activePlayers = 0;
+    private static int playersTurn = 0;
+    private static String activePlayer = "";
     
 
     public static void main(String[] args) {
@@ -36,7 +39,6 @@ public class Server {
         }
     }
     
-    
     // Method to listen for "STOP" in a separate thread
     private static void startStopListener() {
         new Thread(() -> {
@@ -47,6 +49,10 @@ public class Server {
                     System.out.println("Stopping server...");
                     running = false;
                     shutdownServer();
+                }
+                if("DEAL".equalsIgnoreCase(command)) {
+                	System.out.println("Dealing community card");
+                	dealCommunityCard();
                 }
             }
             scanner.close();
@@ -65,25 +71,181 @@ public class Server {
             System.err.println("Error during server shutdown.");
         }
     }
-    
-    //Method to deal two cards to a player.
-    private static void dealHoleCards(ServerPlayer player) {
-    	//Create a new list and add two cards from the deck to it.
-    	List<Card> holeCards = new ArrayList<>();
-    	holeCards.add(deck.drawCard());
-    	holeCards.add(deck.drawCard());
+ 
+    private static void startNewRound() {
+    	if(players.size() < 2) {
+    		System.out.println("Not enough players to start a round");
+    		return;
+    	}
     	
-    	//Set the hole cards to the players instance
-    	player.setHoleCards(holeCards);
+    	playersTurn = 0;
+    	
+    	System.out.println("Starting a new round...");
+    	
+    	deck.reset();
+    	gameState = new GameState(); //reset the gamestate
+    	activePlayers = players.size();
+    	
+    	for(ServerPlayer player : players) {
+    		dealHoleCards(player);
+    	}
+    	
+    	transitionToNextPhase();
+    	broadcastGameState();
+    }
+    
+    
+    // Transition to the next phase
+    private static void transitionToNextPhase() {
+        gameState.nextPhase(); //Increment to next phase
+
+        switch(gameState.getCurrentState()){
+        case PRE_FLOP: handlePreFlop(); break;
+        case FLOP: handleFlop(); break;
+        case TURN: handleTurn(); break;
+        case RIVER: handleRiver(); break;
+        case SHOWDOWN: handleShowdown(); break;
+        }
+    }
+    
+    private static void handleShowdown() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private static void handleRiver() {
+		dealCommunityCard();
+	}
+
+	private static void handleTurn() {
+		dealCommunityCard();	
+	}
+
+	private static void handleFlop() {
+		dealCommunityCard();
+		dealCommunityCard();
+		dealCommunityCard();
+	}
+
+	private static void handlePreFlop() {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	private static void handlePlayerAction(ServerPlayer player, String action) {
+		if(!players.get(playersTurn).equals(player)) {
+			System.out.println("Its not" + player.getUsername() + "'s turn!");
+			return;
+		}
+		
+		if (action.startsWith("BET")) {
+	        int amount = Integer.parseInt(action.split(" ")[1]);
+	        player.bet(amount);
+	        gameState.setCurrentBet(amount);
+
+	        // A bet means other players get another chance to act
+	        setAllPlayersNotPlayed();
+	        player.setHasPlayed(true);
+	    } else if (action.equals("CHECK")) {
+	        player.setHasPlayed(true);
+	    } else if (action.equals("FOLD")) {
+	        activePlayers--;
+	        player.fold();
+	        player.setHasPlayed(true);
+	    }
+		
+	    // Move to next player's turn
+	    do {
+	        playersTurn = (playersTurn + 1) % players.size();
+	    } while (players.get(playersTurn).isFolded());
+
+	    updateActivePlayer();
+	    
+	    
+	    // Check if all players have completed the round
+	    if (allPlayersPlayed()) {
+	        setAllPlayersNotPlayed();  // Reset play state for the next phase
+	        transitionToNextPhase();   // Move to the next game phase
+	    }
+		
+	}
+	
+	//Sends to the clients the current game state.
+    private static void broadcastGameState() {
+		String message = "GAME_STATE: " + gameState.getCurrentState().name();
+		broadcastMessage(message);		
+	}
+
+    //Sends to the clients the given message as a String.
+	private static void broadcastMessage(String message) {
+		for(PrintWriter client : clients)
+			client.println(message);
+	}
+	
+	// === Add a Player to the List ===
+    public static synchronized void addPlayer(String playerName) {
+        playerNames.add(playerName);
+        broadcastPlayerList();
+    }
+
+    // === Remove a Player from the List ===
+    public static synchronized void removePlayer(String playerName) {
+        playerNames.remove(playerName);
+        broadcastPlayerList();
+    }
+
+    // === Broadcast Updated Player List to All Clients ===
+    private static void broadcastPlayerList() {
+        String playerListMessage = "PLAYER_LIST:" + String.join(",", playerNames) + ";ACTIVE:" + activePlayer;
+        broadcastMessage(playerListMessage);
+    }
+    
+    private static void updateActivePlayer() {
+        activePlayer = players.get(playersTurn).getUsername(); // Get player's name
+        broadcastPlayerList(); // Broadcast updated player list with active indicator
+    }
+
+	//Method to deal two cards to a player.
+    private static void dealHoleCards(ServerPlayer player) {
+    	//Get the players hand, empty it and add two new cards to it
+    	player.resetHand();
+    	player.getHand().add(deck.drawCard());
+    	player.getHand().add(deck.drawCard());
     	
     	//Send the hole cards to the player
     	player.sendHoleCards();
     }
     
+    //Deals a single card to the community cards.
     private static void dealCommunityCard() {
+    	Card card = deck.drawCard();
     	
+    	for(PrintWriter out : clients) {
+    		out.println("COMMUNITY_CARD: " + card);
+    	}
     }
 
+    //Checks whether or not all the players in the game have played yet.
+    private static boolean allPlayersPlayed() {
+    	boolean allPlayed = true;
+    	for(ServerPlayer p : players) {
+    		if(p.hasPlayed() == false) {
+    			allPlayed = false;
+    			continue;
+    		}
+    	}
+    	return allPlayed;
+    }
+    
+    //Sets all players hasPlayed var to false
+    private static void setAllPlayersNotPlayed() {
+    	for(ServerPlayer p : players) {
+    		p.setHasPlayed( false );
+    	}
+    }
+    
+    
+    
     static class ClientHandler extends Thread {
     	private Socket socket;
         private BufferedReader in;
@@ -99,23 +261,29 @@ public class Server {
             try {
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 out = new PrintWriter(socket.getOutputStream(), true);
+                
+                clients.add(out);
 
                 // First message from client should be the username
                 String username = in.readLine();
                 System.out.println(username + " has joined.");
+                playerNames.add(username);
+                broadcastPlayerList();
 
                 // Create a new player and assign them to ServerPlayer
                 Player player = new Player(username);
                 serverPlayer = new ServerPlayer(player, username, socket, in, out);
                 players.add(serverPlayer);
 
-                // Deal hole cards
-                dealHoleCards(serverPlayer);
+                if(players.size() >= 2) {
+                	startNewRound();
+                }
 
                 // Listen for messages
                 String message;
                 while ((message = in.readLine()) != null) {
                     System.out.println(username + ": " + message);
+                    handlePlayerAction(serverPlayer, message);
                 }
             } catch (IOException e) {
                 System.out.println("Player disconnected.");

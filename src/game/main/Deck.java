@@ -41,7 +41,7 @@ public class Deck {
     }
 
     //removes all cards from the deck and then readds all 52 possible cards, then shuffles it
-    public void resetDeck() {
+    public void reset() {
         cards.clear();
         for (String suit : SUITS) {
             for (String rank : RANKS) {

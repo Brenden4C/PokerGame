@@ -2,6 +2,8 @@ package game.net;
 
 import java.io.*;
 import java.net.*;
+import java.util.List;
+
 import game.gui.GUIController;
 
 public class NetworkController {
@@ -50,20 +52,38 @@ public class NetworkController {
             while ((message = in.readLine()) != null) {
                 System.out.println("Server: " + message);
                 if (message.startsWith("HOLE_CARDS")) {
-                    String[] cardData = message.substring(11).split(", ");
-                    int index = cardData[1].indexOf("]");
-                    cardData[0] = cardData[0].substring(1);
-                    cardData[1] = cardData[1].substring(0, index);
-                    System.out.println(cardData[0] + "---" +cardData[1]);
-                    this.gui.addHoleCardsToGUI(cardData);
-                    System.out.println("Your hole cards: " + cardData[0] + " and " + cardData[1]);
+                    handleHoleCards(message);  
+                }else if(message.startsWith("COMMUNITY_CARD")) {
+                	handleCommunityCard(message);
+                }else if (message.startsWith("PLAYER_LIST:")) {
+                    String[] parts = message.substring(12).split(";");
+                    String[] players = parts[0].split(",");
+                    String activePlayer = parts.length > 1 ? parts[1].replace("ACTIVE:", "") : "";
                     
+                    gui.updatePlayerList(List.of(players), activePlayer);
                 }
             }
             
         } catch (IOException e) {
             System.out.println("Disconnected from server.");
         }
+    }
+    
+    private void handleCommunityCard(String message) {
+		String cardData = message.substring(message.indexOf(":") + 2);
+		System.out.println(cardData);
+		this.gui.addCommunityCard(cardData);
+	}
+
+	private void handleHoleCards(String message) {
+		this.gui.resetHoleCards();
+    	String[] cardData = message.substring(11).split(", ");
+        int index = cardData[1].indexOf("]");
+        cardData[0] = cardData[0].substring(1);
+        cardData[1] = cardData[1].substring(0, index);
+        System.out.println(cardData[0] + "---" +cardData[1]);
+        this.gui.addHoleCardsToGUI(cardData);
+        System.out.println("Your hole cards: " + cardData[0] + " and " + cardData[1]); 
     }
     
     public PrintWriter getOut() {

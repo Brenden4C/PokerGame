@@ -71,6 +71,10 @@ public class Player {
     	this.isFolded = true;
     }
     
+    public void unfold() {
+    	this.isFolded = false;
+    }
+    
     public void resetRoundBet() {
     	this.currentBet = 0;
     }

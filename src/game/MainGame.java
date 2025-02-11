@@ -1,6 +1,5 @@
 package game;
 
-import game.main.*;
 import game.gui.*;
 import game.net.*;
 
@@ -10,7 +9,6 @@ public class MainGame {
 	private static String serverIP = "35.188.99.241";
 	private static int port = 12345;
 	private static NetworkController net;
-	private static NetworkManager netManager;
 	
 	public static void main(String[] args) {
 		StartGame();
