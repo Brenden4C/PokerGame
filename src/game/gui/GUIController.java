@@ -32,7 +32,10 @@ public class GUIController {
         
         //Create the main panel that will hold the background image and the community cards
         bgPanel = new BackgroundPanel("/pokertable.jpg");
+        
+        //Create the chat panel and hook it to the network
         chatPanel = new ChatPanel();
+        chatPanel.setChatListener(message -> {networkController.sendChatMessage(message);} );
         
         //This label will display to the user how many chips they have.
         JLabel chipsLabel = new JLabel(username + " Chips: 1000"); // Assuming the player starts with 1000 chips TODO: MAKE PLAYERS CHIP COUNT GO HERE
@@ -193,4 +196,8 @@ public class GUIController {
 	public void updatePlayerList(List<String> players, String activePlayer) {
         chatPanel.updatePlayerList(players, activePlayer);
     }
+	
+	public ChatPanel getChatPanel() {
+		return this.chatPanel;
+	}
 }

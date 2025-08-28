@@ -54,7 +54,7 @@ public class ChatPanel extends JPanel {
     private void sendMessage() {
         String message = chatInput.getText().trim();
         if (!message.isEmpty()) {
-            addChatMessage("You: " + message);
+            //addChatMessage("You: " + message);
             if (chatListener != null) {
                 chatListener.onChatMessageSent(message); // Send to server
             }

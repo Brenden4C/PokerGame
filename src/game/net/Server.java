@@ -133,6 +133,7 @@ public class Server {
 	}
 	
 	private static void handlePlayerAction(ServerPlayer player, String action) {
+		
 		if(!players.get(playersTurn).equals(player)) {
 			System.out.println("Its not" + player.getUsername() + "'s turn!");
 			return;
@@ -251,6 +252,7 @@ public class Server {
         private BufferedReader in;
         private PrintWriter out;
         private ServerPlayer serverPlayer;
+        private String username;
 
         public ClientHandler(Socket socket) {
             this.socket = socket;
@@ -265,9 +267,9 @@ public class Server {
                 clients.add(out);
 
                 // First message from client should be the username
-                String username = in.readLine();
+                username = in.readLine();
                 System.out.println(username + " has joined.");
-                playerNames.add(username);
+                addPlayer(username);
                 broadcastPlayerList();
 
                 // Create a new player and assign them to ServerPlayer
@@ -283,15 +285,20 @@ public class Server {
                 String message;
                 while ((message = in.readLine()) != null) {
                     System.out.println(username + ": " + message);
+                    if(message.startsWith("CHAT:")) {
+                    	broadcastMessage("CHAT:" + username + ": " + message.substring(5));
+                    }
                     handlePlayerAction(serverPlayer, message);
                 }
             } catch (IOException e) {
-                System.out.println("Player disconnected.");
+                System.out.println(username + " disconnected.");
             } finally {
                 try {
                     socket.close();
                 } catch (IOException ignored) {}
                 players.remove(serverPlayer);
+                removePlayer(username);
+                //TODO: IF PLAYER DISCONNECTS, THEY SHOULD BE AUTO FOLDED SO GAME CAN CONTINUE.
             }
         }
     }

@@ -50,7 +50,7 @@ public class NetworkController {
         try {
             String message;
             while ((message = in.readLine()) != null) {
-                System.out.println("Server: " + message);
+                System.out.println(message);
                 if (message.startsWith("HOLE_CARDS")) {
                     handleHoleCards(message);  
                 }else if(message.startsWith("COMMUNITY_CARD")) {
@@ -61,6 +61,8 @@ public class NetworkController {
                     String activePlayer = parts.length > 1 ? parts[1].replace("ACTIVE:", "") : "";
                     
                     gui.updatePlayerList(List.of(players), activePlayer);
+                }else if (message.startsWith("CHAT:")) {
+                    gui.getChatPanel().addChatMessage(message.substring(5)); // Display chat message
                 }
             }
             
@@ -69,9 +71,14 @@ public class NetworkController {
         }
     }
     
+    // Send a chat message to the server
+    public void sendChatMessage(String message) {
+        out.println("CHAT:" + message);
+    }
+    
     private void handleCommunityCard(String message) {
 		String cardData = message.substring(message.indexOf(":") + 2);
-		System.out.println(cardData);
+		//System.out.println(cardData);
 		this.gui.addCommunityCard(cardData);
 	}
 
