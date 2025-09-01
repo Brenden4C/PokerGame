@@ -8,6 +8,7 @@ import game.main.Player;
 import game.main.Deck;
 import game.main.Card;
 import game.main.GameState;
+import game.main.HandEvaluator;
 
 public class Server {
     private static final int PORT = 12345;
@@ -21,6 +22,7 @@ public class Server {
     private static int activePlayers = 0;
     private static int playersTurn = 0;
     private static String activePlayer = "";
+    private static List<Card> communityCards = new ArrayList<>();
     
 
     public static void main(String[] args) {
@@ -82,11 +84,14 @@ public class Server {
     	
     	System.out.println("Starting a new round...");
     	
+    	broadcastMessage("NEWROUND");
     	deck.reset();
     	gameState = new GameState(); //reset the gamestate
     	activePlayers = players.size();
+    	communityCards.clear();
     	
     	for(ServerPlayer player : players) {
+    		player.resetHand();
     		dealHoleCards(player);
     	}
     	
@@ -108,9 +113,61 @@ public class Server {
         }
     }
     
+    //Uses game logic to take players cards that aren't folded to decide who has the best hand
+    //it will then send a message to each user about who won the hand and then will reset the board
     private static void handleShowdown() {
-		// TODO Auto-generated method stub
+		ArrayList<List<Card>> activePlayerHands = new ArrayList<List<Card>>();
+		ArrayList<ServerPlayer> activePlayers = new ArrayList<ServerPlayer>();
+		int i = 0;
+		//Loop through each player in the game
+		while(i < players.size()) {
+			//If player is not folded get their cards and add them to the active player hands
+			if(!players.get(i).isFolded()) {
+				
+				activePlayerHands.add(players.get(i).getHand());
+				activePlayers.add(players.get(i));
+			}
+			i++;
+		}
+		i = 0;
+		//Add the community cards to each players hands to each hand for evaluation
+		while(i < activePlayerHands.size()) {
+			activePlayerHands.get(i).addAll(communityCards);
+			i++;
+		}
 		
+		//We now have the players hands, we evaluate a winner here
+		int winningIndex = 0;
+	    List<Card> bestHand = activePlayerHands.get(0);
+
+	    for (i = 1; i < activePlayerHands.size(); i++) {
+	        int result = HandEvaluator.compareHands(bestHand, activePlayerHands.get(i));
+	        if (result == 2) { // Player i beats current best
+	            winningIndex = i;
+	            bestHand = activePlayerHands.get(i);
+	        } else if (result == 0) {
+	            // Tie handling → keep track of multiple winners if needed
+	            System.out.println("Tie detected between " + activePlayers.get(winningIndex).getUsername()
+	                               + " and " + activePlayers.get(i).getUsername());
+	        }
+	    }
+
+	    // 3. Announce winner
+	    ServerPlayer winner = activePlayers.get(winningIndex);
+	    System.out.println("Winner: " + winner.getUsername() 
+	                       + " with " + HandEvaluator.bestHand(bestHand));
+	    broadcastMessage("WINNER: " + winner.getUsername() + " with " + HandEvaluator.bestHand(bestHand));
+	    
+	    try {
+            // Pause for 3000 milliseconds (3 seconds)
+	    	System.out.println("Waiting for next round to begin");
+            Thread.sleep(3000); 
+        } catch (InterruptedException e) {
+            // Handle the case where the thread is interrupted while sleeping
+            e.printStackTrace();
+        }
+		
+	    startNewRound();
 	}
 
 	private static void handleRiver() {
@@ -220,6 +277,7 @@ public class Server {
     //Deals a single card to the community cards.
     private static void dealCommunityCard() {
     	Card card = deck.drawCard();
+    	communityCards.add(card);
     	
     	for(PrintWriter out : clients) {
     		out.println("COMMUNITY_CARD: " + card);
@@ -261,13 +319,18 @@ public class Server {
         @Override
         public void run() {
             try {
+            	if(players.size() >= 7) {
+            		System.out.println("Socket denied, max size reached");
+            		return; //TODO ADD QUEUE/SPECTATOR SYSTEM
+            	}
+            	
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 out = new PrintWriter(socket.getOutputStream(), true);
                 
                 clients.add(out);
 
                 // First message from client should be the username
-                username = in.readLine();
+                username = in.readLine(); //TODO: USER SHOULD NOT BE ABLE TO USE SAME USERNAME AS SOMEONE ELSE
                 System.out.println(username + " has joined.");
                 addPlayer(username);
                 broadcastPlayerList();

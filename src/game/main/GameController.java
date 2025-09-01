@@ -18,8 +18,8 @@ public class GameController {
         List<Card> hand2 = HandEvaluator.convert5Card(hand);
         System.out.println(hand2);
         
+        /*
         int runs = 0;
-        
         
     	while(!bestHand.equals("Straight Flush") | hand.get(0).getRankValue() != 14 | hand.get(1).getRankValue() != 13 | !(hand.get(0).getSuit().equals("S"))) {
     		deck = new Deck();
@@ -35,7 +35,7 @@ public class GameController {
 	        runs ++;
     	}
     	System.out.println(runs + "");
-        
+        */
     }
 	
 }

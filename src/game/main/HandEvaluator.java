@@ -95,11 +95,18 @@ public class HandEvaluator {
 
     //Compare two hands that have the same value, -1 for error, 0 for tie, 1 for first hand, 2 for second hand
     //Only accepts 5 card hands
-    public int compareEqualHands(List<Card> hand, List<Card> hand2) {
-    	if(hand.size() != 5 || hand2.size() != 5) {
-    		return -1;
-    	}
-    	return 0;
+    public static int compareEqualHands(List<Card> hand1, List<Card> hand2) {
+        // Make sure sorted high → low
+        sortCardsByRank(hand1);
+        sortCardsByRank(hand2);
+
+        for (int i = 0; i < 5; i++) {
+            int r1 = hand1.get(i).getRankValue();
+            int r2 = hand2.get(i).getRankValue();
+            if (r1 > r2) return 1;
+            if (r2 > r1) return 2;
+        }
+        return 0; // Tie
     }
     
     //Turn a seven card hand into best possible 5 card hand
@@ -282,7 +289,7 @@ public class HandEvaluator {
 
 	    return null;
 	}
-
+	
 	private static List<Card> convertFourOfAKind(List<Card> hand) {
 		sortCardsByRank(hand);
 		List<Card> bestHand = new ArrayList<>();
@@ -415,4 +422,34 @@ public class HandEvaluator {
         }
         return combinations;
     }
+    
+    public static int compareHands(List<Card> hand1, List<Card> hand2) {
+        if (hand1.size() != 7 || hand2.size() != 7) {
+            throw new IllegalArgumentException("Both hands must have exactly 7 cards");
+        }
+
+        //Find the best hand type for each
+        String best1 = bestHand(hand1);
+        String best2 = bestHand(hand2);
+
+        //Compare category strength
+        List<String> handRankings = Arrays.asList(
+                "High Card", "One Pair", "Two Pair", "Three of a Kind", "Straight",
+                "Flush", "Full House", "Four of a Kind", "Straight Flush");
+
+        int rank1 = handRankings.indexOf(best1);
+        int rank2 = handRankings.indexOf(best2);
+
+        if (rank1 > rank2) return 1; // Hand 1 wins
+        if (rank2 > rank1) return 2; // Hand 2 wins
+
+        //If categories are equal, get the actual 5-card best hand and tie-break
+        List<Card> five1 = convert5Card(hand1);
+        List<Card> five2 = convert5Card(hand2);
+
+        int cmp = compareEqualHands(five1, five2);
+        if (cmp != 0) return cmp;
+        return 0; // Tie
+    }
+
 }

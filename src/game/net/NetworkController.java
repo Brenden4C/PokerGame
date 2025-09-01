@@ -20,13 +20,16 @@ public class NetworkController {
     }
 
     // Explicitly connect to the server
-    public void connect() {
+    //returns true if connection occurs, false if connection fails
+    public boolean connect() {
         try {
             socket = new Socket(serverIP, port);
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
     }
     
@@ -37,7 +40,6 @@ public class NetworkController {
 
     public void setGUIController(GUIController gui) {
         this.gui = gui;
-        System.out.println("Gui is set");
     }
 
     public void sendMessage(String message) {
@@ -46,6 +48,8 @@ public class NetworkController {
         }
     }
 
+    //Function listens for messages from the server and then handles the logic of what happens whenever
+    //That users message is supposed to do.
     private void listenForMessages() {
         try {
             String message;
@@ -62,7 +66,12 @@ public class NetworkController {
                     
                     gui.updatePlayerList(List.of(players), activePlayer);
                 }else if (message.startsWith("CHAT:")) {
-                    gui.getChatPanel().addChatMessage(message.substring(5)); // Display chat message
+                    addChatMessage(message.substring(5));
+                }else if (message.startsWith("WINNER:")) {
+                	handleWinner(message);
+                }else if (message.startsWith("NEWROUND")) {
+                	handleNewRound();
+                	addChatMessage("Server: New Round Beginning.");
                 }
             }
             
@@ -71,24 +80,39 @@ public class NetworkController {
         }
     }
     
-    // Send a chat message to the server
+    private void handleNewRound() {
+		this.gui.resetCommunityCards();
+		
+	}
+
+	private void handleWinner(String message) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void addChatMessage(String message) {
+        gui.getChatPanel().addChatMessage(message); // Display chat message
+	}
+	
+	// Send a chat message to the server
     public void sendChatMessage(String message) {
         out.println("CHAT:" + message);
     }
     
+    //Takes the community card that was sent to the user and displays them in the GUI
     private void handleCommunityCard(String message) {
 		String cardData = message.substring(message.indexOf(":") + 2);
 		//System.out.println(cardData);
 		this.gui.addCommunityCard(cardData);
 	}
 
+    //Takes the hole cards sent by the server and add them to the GUI
 	private void handleHoleCards(String message) {
 		this.gui.resetHoleCards();
     	String[] cardData = message.substring(11).split(", ");
         int index = cardData[1].indexOf("]");
         cardData[0] = cardData[0].substring(1);
         cardData[1] = cardData[1].substring(0, index);
-        System.out.println(cardData[0] + "---" +cardData[1]);
         this.gui.addHoleCardsToGUI(cardData);
         System.out.println("Your hole cards: " + cardData[0] + " and " + cardData[1]); 
     }

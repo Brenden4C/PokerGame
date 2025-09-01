@@ -54,4 +54,9 @@ public class BackgroundPanel extends JPanel {
 	public ArrayList<CardGUI> getCommunityCards() {
 		return this.communityCards;
 	}
+	
+	public void resetCommunityCards() {
+		this.communityCards = new ArrayList<>();
+		repaint();
+	}
 }

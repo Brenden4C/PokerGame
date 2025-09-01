@@ -200,4 +200,9 @@ public class GUIController {
 	public ChatPanel getChatPanel() {
 		return this.chatPanel;
 	}
+
+	public void resetCommunityCards() {
+		this.bgPanel.resetCommunityCards();
+		
+	}
 }
