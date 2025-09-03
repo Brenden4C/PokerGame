@@ -5,12 +5,15 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 public class BackgroundPanel extends JPanel {
     private Image backgroundImage;
     private ArrayList<CardGUI> communityCards;
+    private PlayerGUI playerGUI;
+    private List<PlayerGUI> otherPlayers = new ArrayList<PlayerGUI>();
 
     public BackgroundPanel(String imagePath) {
         // Load the image from the classpath
@@ -26,6 +29,10 @@ public class BackgroundPanel extends JPanel {
             System.err.println("Image not found: " + imagePath);
         }
         
+        setLayout(null);
+        playerGUI = new PlayerGUI();
+        playerGUI.setBounds(100, 100, 100, 100);
+        this.add(playerGUI);
         communityCards = new ArrayList<>();
     }
 

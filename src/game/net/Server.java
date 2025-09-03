@@ -30,7 +30,7 @@ public class Server {
             System.out.println("Server is running on port " + PORT);
 
             //Allows me to stop the server by typing "STOP" in console.
-            startStopListener();
+            consoleListener();
             
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -41,8 +41,12 @@ public class Server {
         }
     }
     
-    // Method to listen for "STOP" in a separate thread
-    private static void startStopListener() {
+    /*
+     * Listens for direct messages in the console;
+     * STOP - tells the server to shut down
+     * DEAL - tells the server to deal a card to the players (USED FOR TESTING)
+     */
+    private static void consoleListener() {
         new Thread(() -> {
             Scanner scanner = new Scanner(System.in);
             while (running) {
@@ -52,7 +56,7 @@ public class Server {
                     running = false;
                     shutdownServer();
                 }
-                if("DEAL".equalsIgnoreCase(command)) {
+                if ("DEAL".equalsIgnoreCase(command)) {
                 	System.out.println("Dealing community card");
                 	dealCommunityCard();
                 }
@@ -61,7 +65,7 @@ public class Server {
         }).start();
     }
     
-    //Method to shutdown the server
+    // Shuts down the server
     private static void shutdownServer() {
         try {
             for (PrintWriter client : clients) {
@@ -74,6 +78,7 @@ public class Server {
         }
     }
  
+    //Begins a new round in the poker game
     private static void startNewRound() {
     	if(players.size() < 2) {
     		System.out.println("Not enough players to start a round");
@@ -110,6 +115,8 @@ public class Server {
         case TURN: handleTurn(); break;
         case RIVER: handleRiver(); break;
         case SHOWDOWN: handleShowdown(); break;
+		default:
+			break;
         }
     }
     
@@ -146,7 +153,7 @@ public class Server {
 	            winningIndex = i;
 	            bestHand = activePlayerHands.get(i);
 	        } else if (result == 0) {
-	            // Tie handling → keep track of multiple winners if needed
+	            // TODO: Tie handling → keep track of multiple winners if needed
 	            System.out.println("Tie detected between " + activePlayers.get(winningIndex).getUsername()
 	                               + " and " + activePlayers.get(i).getUsername());
 	        }
@@ -303,7 +310,15 @@ public class Server {
     	}
     }
     
-    
+    private static void handleCommand(String message, PrintWriter client) {
+		if(message.startsWith("tip ")) {
+			//TODO: Add tipping function.
+		}
+		else {
+			client.println("Command not recognized");
+		}
+			
+	}
     
     static class ClientHandler extends Thread {
     	private Socket socket;
@@ -349,7 +364,11 @@ public class Server {
                 while ((message = in.readLine()) != null) {
                     System.out.println(username + ": " + message);
                     if(message.startsWith("CHAT:")) {
+                    	if(message.substring(5).startsWith("/")) {
+                    		handleCommand(message.substring(6), this.out);
+                    	}else {
                     	broadcastMessage("CHAT:" + username + ": " + message.substring(5));
+                    	}                    
                     }
                     handlePlayerAction(serverPlayer, message);
                 }

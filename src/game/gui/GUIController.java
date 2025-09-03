@@ -15,6 +15,7 @@ public class GUIController {
     private ChatPanel chatPanel;
     private List<CardGUI> playerHand = new ArrayList<CardGUI>();
     
+    
     public GUIController(NetworkController net) {
     	this.networkController = net;
     	setUpGUI();
@@ -171,8 +172,8 @@ public class GUIController {
     //then adds the cards to a list and sends them to the display method.
 	public void addHoleCardsToGUI(String[] cardData) {
 		
-		CardGUI card1 = new CardGUI("/cards/" + cardData[0] + ".png", 0, 0);
-		CardGUI card2 = new CardGUI("/cards/" + cardData[1] + ".png", 0, 0);
+		CardGUI card1 = new PlayerCardGUI("/cards/" + cardData[0] + ".png", 0, 0);
+		CardGUI card2 = new PlayerCardGUI("/cards/" + cardData[1] + ".png", 0, 0);
 		
 		playerHand.add(card1);
 		playerHand.add(card2);
@@ -181,7 +182,7 @@ public class GUIController {
 	}
 
 	public void addCommunityCard(String cardData) {
-		CardGUI card = new CardGUI("/cards/" + cardData + ".png", 0, 0);
+		CardGUI card = new CommunityCardGUI("/cards/" + cardData + ".png", 200, 200);
 		if(bgPanel.getCommunityCards().size() != 0)
 			card.setX(bgPanel.getCommunityCards().get(bgPanel.getCommunityCards().size() - 1).getX() + 100);
 		this.bgPanel.addCommunityCard(card);
